@@ -1,7 +1,7 @@
 {
   "version": 1,
   "currency": "AUD",
-  "note": "Edit this file to publish price changes for everyone. Individual browsers may override these prices locally.",
+  "note": "Editable demo estimates in AUD, not retail quotes. New Surron submodels added in v2.4.",
   "prices": {
     "bikes": {
       "surron": 6500,
@@ -10,7 +10,10 @@
       "eride": 7990,
       "79bike": 6900,
       "rtr": 5800,
-      "ridstar": 2200
+      "ridstar": 2200,
+      "surron-ultra": 8900,
+      "surron-storm": 12500,
+      "surron-hyper": 4900
     },
     "parts": {
       "pegs": [

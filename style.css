@@ -70,3 +70,94 @@
 @media(max-width:660px){.hero{gap:20px;min-height:0;padding-bottom:27px}.hero h1{font-size:clamp(50px,12vw,78px);white-space:normal}.hero-hint{margin-top:17px}.featured-photo{height:200px}.featured-view{min-height:288px}.featured-details strong{font-size:23px}.featured-build{font-size:8px;padding:10px 9px}.featured-details{padding:13px 11px}.featured-bar{padding:0 11px}.featured-controls{padding:9px 11px}.featured-caption{padding-left:11px}}
 @media(max-width:380px){.featured-details{flex-wrap:wrap}.featured-build{width:100%}.featured-view{min-height:315px}.featured-photo{height:185px}.featured-dot{min-width:15px;width:15px}}
 @media(prefers-reduced-motion:reduce){.featured-slide.slide-next,.featured-slide.slide-prev{animation:none}.featured-build:hover{transform:none}}
+
+/* SpecX 2.3 — free, offline-friendly part reference studio */
+.free-studio{padding:30px 28px;border-bottom:1px solid #3a4549;background:radial-gradient(circle at 95% 10%,#b6c5c310,transparent 40%),linear-gradient(140deg,#151a1d,#101416);color:#edf2f0}
+.free-studio-head{display:flex;align-items:center;gap:14px}
+.free-studio-icon{width:44px;height:44px;background:#e9eeec;color:#101417;border-radius:11px;display:grid;place-items:center;flex-shrink:0}
+.free-studio-head>div{min-width:0;flex:1}.free-studio h3{font-family:'Space Grotesk',sans-serif;font-size:23px;letter-spacing:-.7px;margin:6px 0 0}
+.free-pill{font-weight:900;letter-spacing:1px;font-size:9px;border:1px solid #dce5e0;color:#e9f3ed;padding:7px 9px;border-radius:5px;white-space:nowrap}
+.free-studio>p{color:#a8b6b8;font-size:12px;line-height:1.8;margin:18px 0 22px;max-width:650px}
+.free-tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.free-finish-tile,.free-part-tile{min-width:0;background:#090d10;border:1px solid #344044;border-radius:9px;padding:17px;display:flex;flex-direction:column;gap:9px;min-height:218px}
+.free-finish-tile>small,.free-part-tile>small{letter-spacing:1.6px;font-size:9px;color:#97a8ad;font-weight:900}
+.free-finish-circle{height:65px;width:65px;border-radius:50%;border:3px solid #5d6c70;box-shadow:0 0 0 5px #ffffff0b;margin:9px 0}
+.free-finish-tile strong{font-size:17px;font-family:'Space Grotesk'}.free-finish-tile>span{font-size:10px;color:#9caeb1;line-height:1.5}
+.free-part-placeholder{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;color:#6f8086;flex:1;min-height:90px;font-size:10px}
+.free-part-image{width:100%;height:112px;object-fit:contain;background:#dfe4e2;border-radius:4px}
+.free-part-actions{display:flex;gap:7px;flex-wrap:wrap}.free-part-actions button{border:1px solid #68797e;color:#e8eeee;background:#252f33;padding:9px 11px;border-radius:5px;display:flex;align-items:center;gap:7px;font-size:9px;font-weight:800}
+.free-part-actions button:hover{background:#364449}.free-part-name{color:#9baeb1;font-size:10px;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.free-selected-head{display:flex;justify-content:space-between;gap:15px;margin:24px 0 9px;letter-spacing:1.4px;font-size:10px;font-weight:900}.free-selected-head strong{color:#aababc}
+.free-selected-list{display:grid;gap:7px;max-height:240px;overflow-y:auto}
+.free-selected-list>div{display:flex;gap:10px;align-items:center;padding:11px 12px;background:#1d2529;border:1px solid #374349;border-radius:5px;font-size:11px}
+.free-selected-list svg{color:#d6e7e1;flex-shrink:0}.free-selected-list span{flex:1;min-width:0}.free-selected-list strong{white-space:nowrap;color:#c7d1d2}
+.free-selected-list>p{border:1px dashed #425155;border-radius:6px;padding:15px;margin:0;color:#96a7aa;font-size:11px;line-height:1.65}
+.free-studio-bottom{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.free-studio-bottom>span{color:#94a5a9;display:flex;align-items:flex-start;gap:8px;font-size:10px;line-height:1.65;flex:1;min-width:210px}.free-studio-bottom>span b{color:#d5dfe1}
+.free-studio-bottom>button{display:flex;align-items:center;gap:7px;color:#080c0e;background:#f0f4f1;border:none;border-radius:5px;padding:12px 14px;font-size:10px;font-weight:900;white-space:nowrap}.free-studio-bottom>button:hover{background:#fff}
+@media(max-width:660px){.free-studio{padding:21px 16px}.free-studio h3{font-size:18px}.free-tile-grid{grid-template-columns:1fr 1fr;gap:8px}.free-finish-tile,.free-part-tile{padding:12px}.free-selected-list>div{font-size:10px}.free-studio-head{gap:9px}.free-pill{font-size:8px;padding:6px}.free-studio-bottom>button{width:100%;justify-content:center}}
+@media(max-width:380px){.free-tile-grid{grid-template-columns:1fr}.free-finish-tile,.free-part-tile{min-height:0}}
+
+
+/* SPECX 2.4 — DARK SHOWROOM / MONOCHROME SPACE */
+.photo-stage{background:#0b0f12;color:#f3f6f6}
+.photo-stage:before{background:radial-gradient(ellipse at 52% 50%,#273036 0%,#171d21 45%,#090c0f 98%)}
+.photo-stage:after{content:'';position:absolute;width:68%;height:62%;top:19%;left:16%;border-radius:50%;background:radial-gradient(ellipse at center,#ffffff0b,transparent 70%);pointer-events:none}
+.photo-grid{opacity:.32;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(12.5% - 1px),#83939a17 calc(12.5% - 1px),#83939a17 12.5%),repeating-linear-gradient(0deg,transparent 0,transparent 12.4%,#87989b17 12.5%)}
+.photo-stage-title small,.photo-coordinate,.photo-corner{color:#93a2a8}
+.photo-stage-title strong{color:#f4f7f7;text-shadow:0 2px 12px #0009}
+.photo-stage-title strong span{color:#aebdc1}
+.bike-image{mix-blend-mode:normal;width:95%;height:92%;filter:drop-shadow(0 19px 15px #0009);object-fit:contain}
+.bike-image-wrap:after{background:none}
+.stage-zoom{z-index:4}
+.bike-image-wrap{z-index:1}
+.photo-corner{z-index:3}
+.featured-photo{background:radial-gradient(ellipse at 50% 60%,#333d42,#141b1f 75%,#090d10);}
+.featured-photo:after{opacity:.35}
+.featured-photo img{mix-blend-mode:normal;filter:drop-shadow(0 10px 8px #0008);width:94%;height:92%;object-fit:contain}
+.featured-photo-label{color:#c0cdd0}
+.featured-fallback{color:#d4dede}
+/* Brand > model list */
+.brand-list{display:grid;gap:10px}
+.brand-group{border:1px solid #3b484d;background:#151c20;border-radius:9px;overflow:hidden}
+.brand-group.expanded{border-color:#738287;background:#192126}
+.brand-header{display:flex;align-items:stretch;gap:2px;min-height:55px}
+.brand-toggle{flex:1;display:flex;align-items:center;text-align:left;min-width:0;gap:12px;padding:12px 15px;background:transparent;border:0;color:#f2f6f6}
+.brand-toggle .brand-name{font-weight:850;letter-spacing:.55px;font-size:15px;flex:1;min-width:0}
+.brand-toggle .brand-count{font-size:9px;color:#889a9e;white-space:nowrap;letter-spacing:.6px;font-weight:800}
+.brand-toggle svg{color:#b0c1c4;transition:transform .2s}
+.brand-group.expanded .brand-toggle svg{transform:rotate(180deg)}
+.brand-header>a{width:48px;display:grid;place-items:center;color:#bccbce;border-left:1px solid #39474b;transition:color .2s,background .2s}
+.brand-header>a:hover{background:#38484e;color:#fff}
+.brand-models{border-top:1px solid #39484d;padding:10px;display:grid;gap:7px;animation:brandReveal .2s ease-out both}
+@keyframes brandReveal{from{opacity:.5;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.brand-models .bike-choice{border-radius:6px;background:#0f1518}
+.brand-models .bike-choice.chosen{background:#293339}
+.brand-models .bike-choice-details strong{font-size:12px}
+.brand-models .bike-choice-details span{font-size:9px}
+.parts-site-links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid #354249;padding:11px 10px 2px}
+.parts-site-links>span{font-size:8px;letter-spacing:1.15px;font-weight:850;color:#91a5aa;width:100%}
+.parts-site-links>a{display:inline-flex;gap:6px;align-items:center;color:#f1f5f4;text-decoration:none;font-size:10px;padding:7px 9px;background:#344249;border:1px solid #4c6067;border-radius:4px}
+.parts-site-links>a:hover{background:#4c5b62}
+.site-links{border:1px solid #344147;border-radius:13px;background:linear-gradient(145deg,#161d20,#0b1013);padding:32px;margin:32px 0 24px}
+.site-links-heading{max-width:660px}
+.site-links-heading h2{font-size:clamp(25px,3vw,41px);line-height:1.1;letter-spacing:-1.2px;margin:12px 0}
+.site-links-heading p{font-size:12px;color:#a2b3b9;line-height:1.7;margin:0 0 22px}
+.site-links-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.site-links-grid a{min-width:0;min-height:77px;position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;padding:14px 35px 14px 15px;border:1px solid #3a494f;border-radius:8px;background:#1c252a;text-decoration:none;transition:background .2s,border-color .2s,transform .2s}
+.site-links-grid a:hover{background:#2a3438;border-color:#9eb1b5;transform:translateY(-2px)}
+.site-links-grid a span{font-weight:800;color:#f5f7f7;font-size:12px}
+.site-links-grid a small{color:#8ea1a7;font-size:10px}
+.site-links-grid a svg{position:absolute;right:12px;top:14px;color:#b5c5c9}
+@media(max-width:1080px){.site-links-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:690px){.site-links{padding:20px 15px}.site-links-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.brand-toggle .brand-name{font-size:14px}}
+@media(max-width:385px){.site-links-grid{grid-template-columns:1fr}.brand-toggle .brand-count{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.brand-models{animation:none}.brand-toggle svg{transition:none}.site-links-grid a:hover{transform:none}}
+
+/* SpecX moon mark — visible in the navigation and footer */
+.specx-brand-image{width:58px;height:58px;object-fit:cover;border-radius:12px;flex:0 0 auto;border:1px solid #ffffff30;box-shadow:0 0 0 3px #ffffff08;}
+.logo-type small{font-size:7px;letter-spacing:.65px;max-width:190px;white-space:normal;line-height:1.3;}
+.footer-brand{display:inline-flex;align-items:center;gap:12px;}
+.footer-brand img{width:52px;height:52px;object-fit:cover;border:1px solid #ffffff38;border-radius:11px;}
+@media(max-width:900px){.specx-brand-image{width:46px;height:46px}.logo-type small{max-width:126px;letter-spacing:.35px;font-size:6px}.header-inner{gap:12px}}
+@media(max-width:440px){.specx-brand-image{width:42px;height:42px}.logo-lockup{gap:8px}.logo-type strong{font-size:21px}.logo-type small{max-width:100px;font-size:5.5px}.footer-brand img{width:44px;height:44px}}

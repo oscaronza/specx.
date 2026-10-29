@@ -1,21 +1,37 @@
-# SpecX 2.5 — Image Reliability Fix
+# SpecX 2.6 — TikTok UFO Banner Update
 
-This update fixes missing logo images and reduces the number of broken showroom photos.
+This is the **complete SpecX website** (not just a code snippet), based on 2.5 with the existing builder, bike carousel, prices, logo and external links intact.
 
-**What changed**
-- The SpecX moon logo is embedded directly in `main.jsx` for navbar, footer and banner. It no longer relies on `/public/specx-logo.webp` being uploaded correctly.
-- The browser tab icon is embedded directly in `index.html`.
-- The owner's Surron Light Bee X side-profile photo is embedded directly in `main.jsx`.
-- Other models have backup photographic image URLs; if they are unavailable, the website displays a clean branded fallback rather than a broken photo.
-- All existing models, upgrade options, slideshow, AUD pricing and TikTok links are preserved.
+## New: space-themed TikTok transmission banner
 
-**On Windows / GitHub**
-1. Download and extract `specx-2.5-image-fix.zip`.
-2. Open your existing SpecX GitHub repository and upload the files in this folder. Replace the existing `index.html`, `main.jsx`, `style.css` and `package.json`.
-3. For complete functionality, upload the `public` folder too. The folder must appear as `public/prices.json`, `public/specx-logo.webp`, and `public/bikes/surron-lightbee-cutout.png` in GitHub. GitHub's web uploader may need files dragged from Windows File Explorer, or the individual paths created.
-4. Commit the changes. Vercel redeploys automatically.
-5. Open the newest green **Ready** deployment and press **Ctrl + Shift + R**.
+- Added a black/chrome scrolling TikTok banner **between the bike configurator and the Resources section** (the area marked red in your screenshot).
+- Text scrolls left, disappears off-screen, and seamlessly repeats: **FOLLOW @SPECXEBIKES** and **TAKING E-BIKE MODIFICATIONS TO THE MOON**.
+- Clicking the banner or **OPEN TIKTOK** opens `https://www.tiktok.com/@specxebikes` in another tab.
+- Added a tilted silver UFO and a subtle downward light beam in the banner's top-right corner, with a few small stars.
+- The text pauses when you hover or keyboard-focus the banner. Visitors who prefer reduced motion see a stationary, scrollable version.
+- No extra animation package, paid APIs or passwords are required.
 
-**Note:** Some manufacturers' product photographs are hosted by third-party websites and may still be blocked or moved. The new fallback makes this failure visible without showing broken HTML image icons. For permanent, accurate bike photos, add appropriately licensed model-specific photographs to `public/bikes/` and change the `image` URL for each bike in `main.jsx` (e.g. `image:'/bikes/talaria-mx4.webp'`). Do not label the fallback as a genuine photograph of the chosen model.
+## Uploading from Windows to GitHub
 
-**Local testing:** Install Node.js, open this folder in Command Prompt, run `npm install` and `npm run dev`. For a production check run `npm run build`.
+1. Download and extract the ZIP.
+2. Open your existing `specx` GitHub repository.
+3. Upload the **contents** of this folder, replacing existing files: `index.html`, `main.jsx`, `style.css`, `package.json`, `README.md`, plus the `public` folder with its subfolders.
+4. Click **Commit changes**. Your connected Vercel project will deploy the new version automatically.
+5. Open the latest **Ready** deployment and press **Ctrl+Shift+R** if your browser still shows the previous site.
+
+**Important:** Preserve the folder paths for `public/bikes/` and `public/prices.json` when uploading. Existing local edits to prices may still be present in your browser's local storage; this update does not reset them.
+
+## Running it locally
+
+Install Node.js and from this folder run:
+
+```bash
+npm install
+npm run dev
+```
+
+Open the URL displayed in the terminal (often `http://localhost:5173`). To test the production build, run `npm run build`.
+
+## Notes
+
+The existing third-party bike images may still be blocked by outside image hosts; SpecX uses fallback placeholders for those models. The new TikTok banner and UFO are built entirely with HTML, CSS and SVG and require no external assets.

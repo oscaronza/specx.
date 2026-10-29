@@ -363,7 +363,7 @@ function App(){
     </header>
 
     <main className="main-container">
-      <div className="top-meta"><span><span className="crosshair-icon">✳</span> SPECX DESIGN LAB <span className="top-meta-muted">/ RELEASE 02.4 · SPACE EDITION</span></span><span className="meta-right">AUSTRALIA <span className="tiny-disc">●</span> PRICES IN AUD</span></div>
+      <div className="top-meta"><span><span className="crosshair-icon">✳</span> SPECX DESIGN LAB <span className="top-meta-muted">/ RELEASE 02.6 · SPACE EDITION</span></span><span className="meta-right">AUSTRALIA <span className="tiny-disc">●</span> PRICES IN AUD</span></div>
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-left"><div className="hero-tag"><span className="pulse-dot"/> YOUR MACHINE. YOUR UNIVERSE.</div><h1 id="hero-title">BUILD OUTSIDE<br/><span>THE ORDINARY<span className="hero-period">.</span></span></h1><p>Make it yours, down to the last detail. Choose a bike, explore the parts, and see your build come together.</p><span className="hero-hint">EXPLORE THE LINEUP <ArrowRight size={14}/></span></div>
         <div className="featured-carousel" role="region" aria-roledescription="carousel" aria-label="Featured electric bike models" onMouseEnter={()=>setCarouselHovered(true)} onMouseLeave={()=>setCarouselHovered(false)} onFocusCapture={()=>setCarouselFocused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setCarouselFocused(false)}}>
@@ -430,6 +430,40 @@ function App(){
           <div className="price-footer"><div><span>LIVE BUILD ESTIMATE <span className="aud-tag">AUD</span></span><strong>{money(total)}</strong><small>{added.length} upgrades selected · indicative pricing</small></div><div className="price-signal"><span>↗</span></div></div>
         </aside>
       </div>
+      <section className="specx-signal" aria-label="Follow SpecX on TikTok">
+        <div className="signal-speckles" aria-hidden="true"/>
+        <div className="signal-ufo" aria-hidden="true">
+          <svg viewBox="0 0 220 162" xmlns="http://www.w3.org/2000/svg" role="presentation">
+            <defs>
+              <linearGradient id="signal-saucer-metal" x1="0" y1="0" x2="0.9" y2="1">
+                <stop offset="0" stopColor="#ffffff"/><stop offset=".44" stopColor="#aebdc2"/><stop offset="1" stopColor="#53626a"/>
+              </linearGradient>
+              <linearGradient id="signal-beam-light" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#eefbff" stopOpacity=".37"/><stop offset="1" stopColor="#c9e8ef" stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+            <g transform="rotate(-15 120 58)">
+              <path d="M91 77L45 155H186L148 77Z" fill="url(#signal-beam-light)"/>
+              <path d="M87 63C90 41 105 28 125 27C146 26 161 41 163 64" fill="#64757c" stroke="#dae3e6" strokeWidth="3"/>
+              <path d="M96 58C101 42 111 34 125 34C140 34 151 43 155 58" fill="#dfe7e9" opacity=".62"/>
+              <ellipse cx="125" cy="71" rx="86" ry="24" fill="#11191d" stroke="#c7d6da" strokeWidth="3"/>
+              <path d="M42 68C55 54 84 49 125 49C167 49 198 56 208 69C192 79 160 84 125 84C90 84 57 79 42 68Z" fill="url(#signal-saucer-metal)" stroke="#f3f8f9" strokeWidth="2"/>
+              <path d="M51 73Q125 98 198 74" fill="none" stroke="#6b8189" strokeWidth="5"/>
+              <ellipse cx="125" cy="74" rx="70" ry="10" fill="none" stroke="#efffff" strokeWidth="1.8" opacity=".9"/>
+              <circle cx="78" cy="79" r="4" fill="#f6feff"/><circle cx="103" cy="84" r="4" fill="#f6feff"/><circle cx="130" cy="85" r="4" fill="#f6feff"/><circle cx="157" cy="83" r="4" fill="#f6feff"/><circle cx="180" cy="78" r="4" fill="#f6feff"/>
+            </g>
+          </svg>
+        </div>
+        <div className="signal-heading"><span><span className="signal-live-dot"/> SOCIAL TRANSMISSION / 001</span><a href="https://www.tiktok.com/@specxebikes" target="_blank" rel="noopener noreferrer" aria-label="Open SpecX on TikTok">OPEN TIKTOK <ArrowUpRight size={14}/></a></div>
+        <div className="signal-viewport">
+          <div className="signal-scroll-track">
+            {[0,1].map(copy => <a key={copy} className="signal-scroll-link" href="https://www.tiktok.com/@specxebikes" target="_blank" rel="noopener noreferrer" aria-label={copy===0?'Follow @specxebikes on TikTok':undefined} aria-hidden={copy===1?'true':undefined} tabIndex={copy===1?-1:0}>
+              <span className="signal-primary">FOLLOW <strong>@SPECXEBIKES</strong></span><span className="signal-divider" aria-hidden="true">✦</span><span className="signal-secondary">TAKING E-BIKE MODIFICATIONS TO THE MOON</span><span className="signal-divider" aria-hidden="true">✦</span>
+            </a>)}
+          </div>
+        </div>
+        <div className="signal-bottom"><span>SPECX / SOCIAL CHANNEL</span><span>NEW BUILDS &amp; UPDATES ↗</span></div>
+      </section>
       <section className="site-links" aria-labelledby="site-links-title">
         <div className="site-links-heading"><span className="micro">SPECX / RESOURCES</span><h2 id="site-links-title">Real brands. Real websites.</h2><p>Explore official manufacturer sites, Australian distributors and parts makers. External links open in a new tab. SpecX is independent and does not verify fitment or stock.</p></div>
         <div className="site-links-grid">{[...brandSites,...partSites].map(s=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer"><span>{s.name}</span><small>{s.desc}</small><ExternalLink size={17}/></a>)}</div>

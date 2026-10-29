@@ -176,3 +176,61 @@
 .bike-thumb .model-image-placeholder .model-graphic svg,.summary-thumb .model-image-placeholder .model-graphic svg{width:25px;height:25px}
 .bike-thumb .model-image-placeholder>span,.bike-thumb .model-image-placeholder>strong,.bike-thumb .model-image-placeholder>small,.summary-thumb .model-image-placeholder>span,.summary-thumb .model-image-placeholder>strong,.summary-thumb .model-image-placeholder>small{display:none}
 .lightbox-image .model-image-placeholder{width:100%;min-height:320px}
+
+
+/* SPECX 2.6 — TikTok orbital transmission banner */
+.specx-signal{
+  position:relative;isolation:isolate;min-width:0;overflow:hidden;
+  margin:28px 0 30px;border:1px solid #3b494f;border-radius:13px;
+  background:radial-gradient(ellipse at 82% -45%,#a0b5bf1c,transparent 55%),
+             linear-gradient(110deg,#0d1216 0%,#151e23 57%,#0d1215 100%);
+  box-shadow:inset 0 1px 0 #ffffff13;
+}
+.signal-speckles{
+  position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.65;
+  background-image:radial-gradient(circle at 5% 22%,#f0f6fa 1px,transparent 1.9px),
+                   radial-gradient(circle at 22% 68%,#ffffff8a 1px,transparent 2px),
+                   radial-gradient(circle at 38% 17%,#c7d6dd 1px,transparent 2px),
+                   radial-gradient(circle at 65% 79%,#ffffffbd 1px,transparent 2px),
+                   radial-gradient(circle at 79% 39%,#f5ffff77 1px,transparent 2px),
+                   radial-gradient(circle at 97% 18%,#cddde5 1px,transparent 2px);
+}
+.signal-heading,.signal-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;position:relative;z-index:3}
+.signal-heading{height:37px;padding:0 26px;border-bottom:1px solid #ffffff16}
+.signal-heading>span{display:inline-flex;align-items:center;gap:9px;color:#a9bbc0;font-weight:900;font-size:9px;letter-spacing:2.1px}
+.signal-heading>a{display:inline-flex;align-items:center;gap:5px;text-decoration:none;font-weight:900;font-size:9px;letter-spacing:1.2px;color:#d6e3e6;padding:9px 2px;transition:color .2s}
+.signal-heading>a:hover{color:#fff;text-decoration:underline;text-underline-offset:4px}
+.signal-live-dot{width:6px;height:6px;border-radius:50%;background:#e6f2f4;box-shadow:0 0 0 3px #e6f2f416,0 0 10px #efffff80}
+.signal-viewport{position:relative;overflow:hidden;margin:0 0;z-index:1;height:79px;display:flex;align-items:center;mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 85%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 85%,transparent 100%)}
+.signal-scroll-track{display:flex;flex-wrap:nowrap;width:max-content;min-width:max-content;animation:specx-transmission 28s linear infinite;will-change:transform}
+.signal-scroll-link{display:flex;align-items:center;gap:35px;flex:none;white-space:nowrap;text-decoration:none;padding-right:35px;color:#f0f5f5;line-height:1}
+.signal-scroll-link:focus-visible{outline:2px solid #fff;outline-offset:-3px}
+.signal-primary{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(25px,3vw,39px);letter-spacing:1px}
+.signal-primary strong{color:#fff;font-weight:900;-webkit-text-stroke:.2px #fff}
+.signal-secondary{font-family:'Space Grotesk',sans-serif;font-size:clamp(11px,1.4vw,14px);font-weight:700;letter-spacing:1.4px;color:#a9bec5}
+.signal-divider{color:#fff;font-size:17px;opacity:.65}
+@keyframes specx-transmission{to{transform:translateX(-50%)}}
+.specx-signal:hover .signal-scroll-track,.specx-signal:focus-within .signal-scroll-track{animation-play-state:paused}
+.signal-bottom{padding:0 26px;height:29px;border-top:1px solid #ffffff15;color:#8799a2;font-size:8px;letter-spacing:1.7px;font-weight:800}
+.signal-ufo{position:absolute;right:18px;top:-24px;width:193px;z-index:2;pointer-events:none;filter:drop-shadow(0 0 12px #c9f5ff2d)}
+.signal-ufo svg{display:block;width:100%;height:auto;overflow:visible}
+@media(max-width:730px){
+  .specx-signal{margin:19px 0 23px}
+  .signal-heading{padding:0 15px;height:34px}
+  .signal-heading>span{font-size:8px;letter-spacing:1px}
+  .signal-heading>a{font-size:8px;letter-spacing:.4px}
+  .signal-ufo{width:126px;right:-11px;top:-13px;opacity:.83}
+  .signal-viewport{height:68px}
+  .signal-scroll-link{gap:22px;padding-right:22px}
+  .signal-bottom{padding:0 15px;font-size:7px;letter-spacing:.8px}
+}
+@media(max-width:430px){
+  .signal-heading>a{font-size:0;gap:0}.signal-heading>a svg{width:17px;height:17px}
+  .signal-ufo{width:110px;right:-20px;top:-8px}
+  .signal-primary{font-size:27px}
+  .signal-secondary{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  .signal-scroll-track{animation:none;transform:none;will-change:auto}
+  .signal-viewport{overflow:auto;mask-image:none;-webkit-mask-image:none}
+}

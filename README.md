@@ -1,27 +1,25 @@
-# SPECX 2.0 — Build Beyond Limits
+# SPECX 2.1 — Build Beyond Limits
 
-A black-and-white, space-inspired **2D e-bike configurator** powered by React + Vite. It replaces the earlier placeholder 3D bike with realistic *reference photographs* of specific bike models.
+A monochrome / space-inspired e-bike configurator for Surron, Talaria, Stark Varg, E Ride Pro, 79 Bike, ETM RTR and Ridstar. React + Vite, 2D reference photos, 15 upgrade categories, editable AUD estimates, optional server-side AI concept preview, and TikTok **@specxebikes**.
 
-## What's included
+## NEW in 2.1
 
-- Seven bike choices: Surron Light Bee X, Talaria Sting R MX4, Stark Varg EX, E Ride Pro SS 2.0, 79 Bike Falcon M, ETM RTR Sport and Ridstar Q20.
-- Fifteen upgrade categories including pegs, Guts Racing seat cover options, foot brake concepts, powder coating, graphics, handlebars, wheels and more.
-- Live **AUD** demo estimates and an itemised downloadable build sheet.
-- A responsive, monochrome / chrome / space-like UI with animated stars, a finish inspiration palette, searchable bike selector and zoom controls.
-- Upload your own side-profile bike photograph **locally in your browser** (the photo is not uploaded to a server).
-- Auto-save build selections in browser storage, and copy a link containing the selections (not your uploaded image).
+1. **Edit Prices** — In the site navigation choose **EDIT PRICES**. Edit bike prices and all upgrade prices in AUD. The live build total, selected upgrades and downloadable build sheet use your new prices. Your edits persist in **your browser only** until you publish them.
+2. **Publish prices for every visitor** — In the price editor click **EXPORT / PUBLISH PRICES**, which downloads `prices.json`. Replace the file `public/prices.json` in your GitHub repository with the downloaded file, commit, and wait for Vercel to redeploy. This updates the default price list **for everyone**. A visitor who previously customised their own browser price overrides will still see their local prices. Press **RESET ALL** in their price editor to use the published list.
+3. **TikTok** — Buttons in the navigation and footer link to <https://www.tiktok.com/@specxebikes>.
+4. **AI Studio** — After choosing a bike and upgrades, scroll below its preview and click **GENERATE AI PREVIEW**. The preview uses an actual server-side image-generation API, not a fake colour filter. You may upload **your own photo of your bike** and optionally **a photo of the aftermarket part** to give the model stronger visual references. Switch between **ORIGINAL / AI** and save the AI concept as a JPG.
+5. **AI generations are on-demand**, not automatically triggered after every change, because **each generation incurs an API charge**. If you change the build after generation, the photo is marked outdated until regenerated.
 
-## Run on Windows PC
+**Important:** AI images are imaginative approximations, **not** exact manufacturer CAD or guaranteed accurate aftermarket part photos. Prickly pegs, seat covers, etc. may be drawn inaccurately. Verify appearance, compatibility, dimensions and safety with a supplier. SpecX is not affiliated with the third-party manufacturers.
 
-1. Install Node.js LTS from <https://nodejs.org/>.
-2. Extract the ZIP and open the folder `specx-2.0` in File Explorer.
-3. Click the address bar, type `cmd`, press Enter.
-4. Enter `npm install` and then `npm run dev`.
-5. Open the URL displayed in the terminal (usually <http://localhost:5173/>).
+## Get the new version live on your existing GitHub + Vercel site (Windows)
 
-## Update your existing GitHub + Vercel site
+### A. Upload the files
 
-**Important: these five files must be directly in your repository's ROOT**, not inside another folder:
+1. Unzip `specx-2.1.zip` on your Windows PC.
+2. Open your **existing** GitHub SpecX repository. Do **not** create a new repo.
+3. Easiest way to preserve folders: use GitHub Desktop to clone the repository to your PC, copy the **contents** of `specx-2.1` into the cloned folder, replacing existing files, then **Commit** and **Push origin**. Alternatively use GitHub's web upload and make sure the paths below are preserved.
+4. Make sure the repository has this structure **at its root** (the whole project must not be nested inside another `specx-2.1` folder):
 
 ```text
 specx/
@@ -29,36 +27,60 @@ specx/
 ├── main.jsx
 ├── style.css
 ├── package.json
-└── README.md
+├── README.md
+├── .gitignore
+├── .env.example       # example only — NO actual secrets
+├── public/
+│   └── prices.json    # globally published estimated prices
+└── api/
+    └── generate-preview.js  # Vercel serverless AI route
 ```
 
-1. Visit your existing GitHub `specx` repository, not a new one.
-2. Replace the existing `index.html`, `main.jsx`, `style.css`, `package.json` and `README.md` with the ones from this ZIP. GitHub's **Add file → Upload files** will let you replace files if you upload the extracted files (not the ZIP) and commit changes. If GitHub doesn't permit overwriting, edit or delete the old files and upload the new ones.
-3. **Delete old `src/main.jsx` and `src/style.css` files only if they still exist.** This package does not use a `src/` folder. The root `index.html` correctly points to `/main.jsx`.
-4. Commit your changes to `main`.
-5. Vercel should automatically deploy. Its framework preset should be **Vite**, build command `npm run build`, output directory `dist`, root directory `./`.
+5. Vercel automatically redeploys after the push. Settings should still be: framework **Vite**, build command `npm run build`, output directory `dist`, root directory `./`.
+6. **Prices / TikTok / bike selection work immediately.** AI remains locked until Step B.
 
-To test a production build on your PC, run `npm run build`.
+### B. Turn on AI photo generation (optional, paid service)
 
-## Editing content
+1. Set up an OpenAI **API account with image-model access and billing**. ChatGPT Plus is separate from API billing. AI requests **cost money**. Set an appropriate budget / spend limit and keep the owner-only passcode private.
+2. Open Vercel → **SpecX project** → **Settings** → **Environment Variables**.
+3. Add these variables for the Production environment:
 
-- Bike models, prices, photo URLs and source links: top of `main.jsx`, in `bikes`.
-- Upgrade categories and sample prices: `categories` in `main.jsx`.
-- Finish palette: `colors` in `main.jsx`.
-- All styling and animations: `style.css`.
+   - `OPENAI_API_KEY` = your secret OpenAI API key (**server-side only**)
+   - `SPECX_PREVIEW_PASSCODE` = a **long private passcode** you choose (ideally at least 16 random characters)
+   - Optional: `SPECX_IMAGE_MODEL` = `gpt-image-2.5-flare` (this is already the default)
 
-## IMPORTANT — photo copyright, estimates, fitment
+4. Save. Go to **Deployments** and **Redeploy** to apply the new settings.
+5. In SpecX, choose a model, choose upgrades (for example, Prickly Motorsports pegs), enter your owner passcode in the **AI Studio** field, and press **GENERATE AI PREVIEW**. The site sends the selected bike / upgrades and optional uploaded reference photos to `/api/generate-preview` securely on the same origin. Your secret API key stays on Vercel, **not inside the website's front-end files**.
+6. Optional: upload a photo of your bike with **MY PHOTO** under the preview, then a part photo with **ADD PART REFERENCE PHOTO** in AI Studio. The image model edits your bike photo using the part as a reference. Only upload photos you own or have permission to use.
 
-**External stock bike photos load from third-party websites.** They are referenced for a visual prototype and may stop loading or block hotlinking. SpecX does **not** have rights to those photographs. Before commercial/public production use, obtain permission or replace with your own licensed side-profile photographs, host those images on your own website, and replace the URLs in `main.jsx`. Site functionality does not depend on those photos loading; it offers a fallback plus an option for a local user photo.
+**Never paste your actual API key or private passcode into GitHub, JavaScript, or chat messages.** `.env.example` contains fake values, not your secrets.
 
-Photo reference sources:
+**Hosting note:** Vercel Hobby functions have duration and response-size constraints; on slow image generations you may receive a timeout and need to try later or configure a production-grade processing flow. This prototype has a private owner passcode plus a *best-effort* in-memory limit to protect API usage. For a public AI service serving other people, use real authentication, durable rate limiting, abuse prevention, and provider billing controls before opening it up. AI is not enabled for everyone automatically.
 
-- Surron: Ronhack — <https://ronhack.com/blogs/surron/exploring-the-power-of-the-sur-ron-light-bee-x-top-speed-weight-and-key-upgrades>
-- Talaria: HighVoltagePEV — <https://highvoltagepev.com/products/talaria-sting-r-mx4>
-- Stark Varg: Ridewill — <https://www.ridewill.com/p/de/stark-future-vargex-60-gp-elektro-motorrad-stark-varg-ex-21-18-60-ps-mit-pedalbremse-grau-zugelassen/1691084/>
-- E Ride Pro: E Ride Pro Dealer Portal — <https://dealer.eridepro.com/products/pro-ss-2-0>
-- 79 Bike: 79bikes Canada — <https://79bikes-ca.com/products/79bike-falcon-m-electric-dirt-bike>
-- ETM RTR: Jersey E-Bikes — <https://jerseyebikes.com/products/etm-rtr-sport>
-- Ridstar: Geekbuying — <https://www.geekbuying.com/item/Ridstar-Q20-Electric-Bike-20-inch-1000W-Motor-48V-20Ah-48km-h-Speed-522946.html>
+## Run locally on Windows
 
-**Prices are demo placeholders in AUD, not live or verified retailer prices.** Parts are conceptual choices; no manufacturer fitment has been verified. The photo stays a *stock photograph* rather than pretending to visually show each aftermarket part. The finish picker is inspiration only, with a separate powder coat price option. Confirm suitability, safety, correct installation and local regulations with qualified professionals. SpecX is unaffiliated with brands named in the sample data. This prototype does not have checkout or payment functionality.
+1. Install Node.js LTS from <https://nodejs.org/>.
+2. Open `specx-2.1` in File Explorer, click the address bar, type `cmd`, press Enter.
+3. Run `npm install` then `npm run dev`.
+4. Open <http://localhost:5173>.
+
+The configurator, custom pricing and TikTok link work under Vite. **AI requires the serverless route**, so for local AI testing use Vercel CLI and `vercel dev` with your own environment variables, or test AI on your deployed Vercel site.
+
+## Pricing notes
+
+- Prices are **illustrative AUD estimates**, not live merchant prices.
+- `public/prices.json` is the published source of default prices. When you export from the editor, upload the downloaded `prices.json` over this file (keep the `public/` folder).
+- Edits in your browser override `public/prices.json` locally. **RESET ALL** removes your local overrides.
+- Share links contain the selected parts and colour, **not your local price edits or images**.
+- Install labour, taxes, shipping and supplier compatibility must be confirmed independently.
+
+## Photo and safety notes
+
+- The seven **stock reference photographs** in `main.jsx` are linked from external sites, not bundled with permission. They may stop loading or block hotlinks. Replace them with your own appropriately licensed photographs before a public/commercial release.
+- The preview is 2D, not a rotatable 3D model. Upgrades are **not applied** to the stock photo; the AI button makes a **new approximate concept image**.
+- Uploaded photos are local until you click **Generate AI Preview**, when they are sent to the image API to process the request. Photos are not saved in your browser's persistent storage or a SpecX database. Generated images stay in current browser memory until refresh, unless you download them.
+- Part names and compatibility are examples. Check proper parts and installation with a qualified supplier and follow local riding laws.
+
+## Current test status
+
+Syntax checks were run against `main.jsx` and the serverless API; API handler configuration/authentication and mocked request response paths were exercised. A full npm/Vite production build and a real image-provider request **have not been run in this environment**, so please test deployment and your configured API in Vercel.

@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "currency": "AUD",
+  "note": "Edit this file to publish price changes for everyone. Individual browsers may override these prices locally.",
+  "prices": {
+    "bikes": {
+      "surron": 6500,
+      "talaria": 7200,
+      "stark": 19500,
+      "eride": 7990,
+      "79bike": 6900,
+      "rtr": 5800,
+      "ridstar": 2200
+    },
+    "parts": {
+      "pegs": [
+        {
+          "name": "Factory pegs",
+          "price": 0
+        },
+        {
+          "name": "Prickly Motorsports pegs",
+          "price": 295
+        },
+        {
+          "name": "Warp 9-style pegs",
+          "price": 225
+        },
+        {
+          "name": "Anodised CNC peg set",
+          "price": 245
+        }
+      ],
+      "seat": [
+        {
+          "name": "Factory seat cover",
+          "price": 0
+        },
+        {
+          "name": "Guts Racing gripper cover",
+          "price": 190
+        },
+        {
+          "name": "Guts Racing custom cover",
+          "price": 245
+        },
+        {
+          "name": "Ribbed custom seat cover",
+          "price": 210
+        }
+      ],
+      "coat": [
+        {
+          "name": "Factory finish",
+          "price": 0
+        },
+        {
+          "name": "Frame powder coating",
+          "price": 550
+        },
+        {
+          "name": "Frame + swingarm powder coating",
+          "price": 850
+        }
+      ],
+      "brakes": [
+        {
+          "name": "Factory brake controls",
+          "price": 0
+        },
+        {
+          "name": "Foot brake conversion concept",
+          "price": 260
+        },
+        {
+          "name": "Premium foot brake setup",
+          "price": 480
+        }
+      ],
+      "bars": [
+        {
+          "name": "Factory handlebars",
+          "price": 0
+        },
+        {
+          "name": "ProTaper bars",
+          "price": 185
+        },
+        {
+          "name": "Renthal bars",
+          "price": 225
+        },
+        {
+          "name": "Rise bar kit",
+          "price": 265
+        }
+      ],
+      "grips": [
+        {
+          "name": "Factory grips",
+          "price": 0
+        },
+        {
+          "name": "ODI-style grips",
+          "price": 49
+        },
+        {
+          "name": "Lock-on grip set",
+          "price": 79
+        }
+      ],
+      "wheels": [
+        {
+          "name": "Factory wheels",
+          "price": 0
+        },
+        {
+          "name": "Black rim package",
+          "price": 340
+        },
+        {
+          "name": "Premium wheelset concept",
+          "price": 980
+        }
+      ],
+      "tyres": [
+        {
+          "name": "Factory tyres",
+          "price": 0
+        },
+        {
+          "name": "Off-road tyre package",
+          "price": 320
+        },
+        {
+          "name": "Dual-surface tyre package",
+          "price": 360
+        }
+      ],
+      "suspension": [
+        {
+          "name": "Factory suspension",
+          "price": 0
+        },
+        {
+          "name": "Suspension service / tuning",
+          "price": 690
+        },
+        {
+          "name": "Premium suspension package",
+          "price": 1450
+        }
+      ],
+      "graphics": [
+        {
+          "name": "Factory graphics",
+          "price": 0
+        },
+        {
+          "name": "Minimal decal kit",
+          "price": 145
+        },
+        {
+          "name": "Custom graphics kit",
+          "price": 195
+        },
+        {
+          "name": "Full custom wrap concept",
+          "price": 390
+        }
+      ],
+      "lights": [
+        {
+          "name": "Factory lighting",
+          "price": 0
+        },
+        {
+          "name": "LED lighting package",
+          "price": 165
+        },
+        {
+          "name": "Premium light kit",
+          "price": 290
+        }
+      ],
+      "guards": [
+        {
+          "name": "Factory protection",
+          "price": 0
+        },
+        {
+          "name": "Skid plate concept",
+          "price": 175
+        },
+        {
+          "name": "Guard package",
+          "price": 310
+        }
+      ],
+      "drivetrain": [
+        {
+          "name": "Factory drivetrain",
+          "price": 0
+        },
+        {
+          "name": "Chain and sprocket service",
+          "price": 235
+        },
+        {
+          "name": "Premium drivetrain parts",
+          "price": 495
+        }
+      ],
+      "fenders": [
+        {
+          "name": "Factory fenders",
+          "price": 0
+        },
+        {
+          "name": "Minimal fender kit",
+          "price": 130
+        },
+        {
+          "name": "Custom fender set",
+          "price": 220
+        }
+      ],
+      "details": [
+        {
+          "name": "Factory details",
+          "price": 0
+        },
+        {
+          "name": "Anodised detail kit",
+          "price": 115
+        },
+        {
+          "name": "Complete accent hardware kit",
+          "price": 260
+        }
+      ]
+    }
+  }
+}

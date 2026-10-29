@@ -1,8 +1,12 @@
-# SPECX 2.1 — Build Beyond Limits
+# SPECX 2.2 — Build Beyond Limits
 
 A monochrome / space-inspired e-bike configurator for Surron, Talaria, Stark Varg, E Ride Pro, 79 Bike, ETM RTR and Ridstar. React + Vite, 2D reference photos, 15 upgrade categories, editable AUD estimates, optional server-side AI concept preview, and TikTok **@specxebikes**.
 
-## NEW in 2.1
+## NEW in 2.2
+
+**Featured bike slideshow:** The homepage now cycles through all seven bikes in order (Surron → Talaria → Stark Varg → E Ride Pro → 79 Bike → ETM RTR → Ridstar) about every 5.6 seconds, with subtle sliding transitions. It pauses when hovered or focused, and offers Play/Pause, previous/next arrows and seven position buttons. **BUILD THIS BIKE** takes visitors straight into Customise with that model selected. The showcase does **not** silently replace the bike being customised or affect pricing. Users who request reduced motion see a static featured bike and can change slides manually. The slides use the existing third-party reference images, so replace those with properly licensed photos before public/commercial use.
+
+## Other features included from 2.1
 
 1. **Edit Prices** — In the site navigation choose **EDIT PRICES**. Edit bike prices and all upgrade prices in AUD. The live build total, selected upgrades and downloadable build sheet use your new prices. Your edits persist in **your browser only** until you publish them.
 2. **Publish prices for every visitor** — In the price editor click **EXPORT / PUBLISH PRICES**, which downloads `prices.json`. Replace the file `public/prices.json` in your GitHub repository with the downloaded file, commit, and wait for Vercel to redeploy. This updates the default price list **for everyone**. A visitor who previously customised their own browser price overrides will still see their local prices. Press **RESET ALL** in their price editor to use the published list.
@@ -16,10 +20,10 @@ A monochrome / space-inspired e-bike configurator for Surron, Talaria, Stark Var
 
 ### A. Upload the files
 
-1. Unzip `specx-2.1.zip` on your Windows PC.
+1. Unzip `specx-2.2.zip` on your Windows PC.
 2. Open your **existing** GitHub SpecX repository. Do **not** create a new repo.
-3. Easiest way to preserve folders: use GitHub Desktop to clone the repository to your PC, copy the **contents** of `specx-2.1` into the cloned folder, replacing existing files, then **Commit** and **Push origin**. Alternatively use GitHub's web upload and make sure the paths below are preserved.
-4. Make sure the repository has this structure **at its root** (the whole project must not be nested inside another `specx-2.1` folder):
+3. Easiest way to preserve folders: use GitHub Desktop to clone the repository to your PC, copy the **contents** of `specx-2.2` into the cloned folder, replacing existing files, then **Commit** and **Push origin**. Alternatively use GitHub's web upload and make sure the paths below are preserved.
+4. Make sure the repository has this structure **at its root** (the whole project must not be nested inside another `specx-2.2` folder):
 
 ```text
 specx/
@@ -60,7 +64,7 @@ specx/
 ## Run locally on Windows
 
 1. Install Node.js LTS from <https://nodejs.org/>.
-2. Open `specx-2.1` in File Explorer, click the address bar, type `cmd`, press Enter.
+2. Open `specx-2.2` in File Explorer, click the address bar, type `cmd`, press Enter.
 3. Run `npm install` then `npm run dev`.
 4. Open <http://localhost:5173>.
 

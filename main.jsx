@@ -127,7 +127,17 @@ function App(){
   const [photoFailed,setPhotoFailed] = useState(false);
   const [userPhoto,setUserPhoto] = useState(null);
   const [showZoom,setShowZoom] = useState(false);
+  const [featuredIndex,setFeaturedIndex] = useState(0);
+  const [carouselPaused,setCarouselPaused] = useState(false);
+  const [carouselHovered,setCarouselHovered] = useState(false);
+  const [carouselFocused,setCarouselFocused] = useState(false);
+  const [reducedMotion,setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [slideDirection,setSlideDirection] = useState('next');
+  const [featuredImageFailed,setFeaturedImageFailed] = useState(false);
+  const workspaceRef = useRef(null);
   const [mobileMenu,setMobileMenu] = useState(false);
+  const featuredBike = bikes[featuredIndex];
+  const carouselIsPaused = carouselPaused || carouselHovered || carouselFocused || reducedMotion;
   const [toast,setToast] = useState('');
   const inputRef = useRef(null);
   const partInputRef = useRef(null);
@@ -157,6 +167,38 @@ function App(){
       setPublishedPrices(published);
     }).catch(()=>{});
   },[]);
+  useEffect(()=>{
+    const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update=()=>setReducedMotion(motion.matches);
+    motion.addEventListener('change', update);
+    return ()=>motion.removeEventListener('change', update);
+  },[]);
+  useEffect(()=>{
+    if(carouselIsPaused)return;
+    const interval=window.setInterval(()=>{
+      if(document.visibilityState==='visible'){
+        setSlideDirection('next');
+        setFeaturedIndex(i=>(i+1)%bikes.length);
+        setFeaturedImageFailed(false);
+      }
+    },5600);
+    return ()=>window.clearInterval(interval);
+  },[carouselIsPaused,featuredIndex]);
+  function moveFeatured(direction){
+    setSlideDirection(direction<0?'prev':'next');
+    setFeaturedImageFailed(false);
+    setFeaturedIndex(i=>(i+direction+bikes.length)%bikes.length);
+  }
+  function jumpFeatured(i){
+    setSlideDirection(i<featuredIndex?'prev':'next');
+    setFeaturedImageFailed(false);
+    setFeaturedIndex(i);
+  }
+  function buildFeatured(){
+    changeBike(featuredBike.id);
+    setStep(1);
+    window.setTimeout(()=>workspaceRef.current?.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'}),60);
+  }
   useEffect(()=>()=>{clearTimeout(toastRef.current)},[]);
   useEffect(()=>()=>{if(userPhoto)URL.revokeObjectURL(userPhoto)},[userPhoto]);
   function changeBike(id){setBuild(b=>({...b,bike:id}));setZoom(1);setPhotoFailed(false);setUserPhoto(null);setAiPhotoInput(null);setPartPhotoInput(null);setPartPhotoName('');setAiImage(null);setPreviewMode('photo');setAiError('');}
@@ -253,11 +295,27 @@ function App(){
     </header>
 
     <main className="main-container">
-      <div className="top-meta"><span><span className="crosshair-icon">✳</span> SPECX DESIGN LAB <span className="top-meta-muted">/ RELEASE 02.1 · AI STUDIO</span></span><span className="meta-right">AUSTRALIA <span className="tiny-disc">●</span> PRICES IN AUD</span></div>
-      <section className="hero" aria-labelledby="hero-title"><div className="hero-left"><div className="hero-tag"><span className="pulse-dot"/> YOUR MACHINE. YOUR UNIVERSE.</div><h1 id="hero-title">BUILD OUTSIDE<br/><span>THE ORDINARY<span className="hero-period">.</span></span></h1><p>Make it yours, down to the last detail. Choose a bike, explore the parts, and see your build come together.</p></div><div className="orbit-mark" aria-hidden="true"><div className="orbital-ring one"/><div className="orbital-ring two"/><div className="orbital-core">X</div><small>NO LIMITS / 02</small></div></section>
+      <div className="top-meta"><span><span className="crosshair-icon">✳</span> SPECX DESIGN LAB <span className="top-meta-muted">/ RELEASE 02.2 · FEATURED LINEUP</span></span><span className="meta-right">AUSTRALIA <span className="tiny-disc">●</span> PRICES IN AUD</span></div>
+      <section className="hero" aria-labelledby="hero-title">
+        <div className="hero-left"><div className="hero-tag"><span className="pulse-dot"/> YOUR MACHINE. YOUR UNIVERSE.</div><h1 id="hero-title">BUILD OUTSIDE<br/><span>THE ORDINARY<span className="hero-period">.</span></span></h1><p>Make it yours, down to the last detail. Choose a bike, explore the parts, and see your build come together.</p><span className="hero-hint">EXPLORE THE LINEUP <ArrowRight size={14}/></span></div>
+        <div className="featured-carousel" role="region" aria-roledescription="carousel" aria-label="Featured electric bike models" onMouseEnter={()=>setCarouselHovered(true)} onMouseLeave={()=>setCarouselHovered(false)} onFocusCapture={()=>setCarouselFocused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setCarouselFocused(false)}}>
+          <div className="featured-bar"><span><span className="featured-indicator"/> FEATURED MACHINES</span><button type="button" className="featured-pause" aria-label={carouselPaused?'Resume automatic bike slides':'Pause automatic bike slides'} aria-pressed={carouselPaused} onClick={()=>setCarouselPaused(v=>!v)}>{carouselPaused?'▶ PLAY':'Ⅱ PAUSE'}</button></div>
+          <div className="featured-view" aria-live="off">
+            <div key={featuredBike.id} className={'featured-slide slide-'+slideDirection}>
+              <div className="featured-photo">
+                {!featuredImageFailed?<img src={featuredBike.image} alt={'Side-profile reference of '+featuredBike.brand+' '+featuredBike.model} onError={()=>setFeaturedImageFailed(true)}/>:<div className="featured-fallback"><Bike size={59} strokeWidth={1}/><span>PHOTO UNAVAILABLE</span></div>}
+                <span className="featured-photo-label">0{featuredIndex+1} / 0{bikes.length}</span>
+              </div>
+              <div className="featured-details"><div><small>MODEL {featuredBike.number} · {featuredBike.type}</small><strong>{featuredBike.brand}</strong><span>{featuredBike.model}</span></div><button type="button" className="featured-build" onClick={buildFeatured} aria-label={'Customise '+featuredBike.brand+' '+featuredBike.model}>BUILD THIS BIKE <ArrowUpRight size={15}/></button></div>
+            </div>
+          </div>
+          <div className="featured-controls"><div className="featured-dots" aria-label="Choose a featured bike">{bikes.map((b,i)=><button type="button" key={b.id} className={featuredIndex===i?'featured-dot active':'featured-dot'} aria-label={'Show '+b.brand+' '+b.model} aria-current={featuredIndex===i?'true':undefined} onClick={()=>jumpFeatured(i)}/>)}</div><div className="featured-arrows"><button type="button" aria-label="Previous bike" onClick={()=>moveFeatured(-1)}><ChevronLeft size={18}/></button><button type="button" aria-label="Next bike" onClick={()=>moveFeatured(1)}><ChevronRight size={18}/></button></div></div>
+          <p className="featured-caption">Reference photographs · Images do not show selected custom parts</p>
+        </div>
+      </section>
       <div className="worktop-bar"><div><span className="worktop-square">▦</span> CONFIGURATOR <span className="worktop-muted">/ PERSONAL GARAGE</span></div><div className="worktop-counter"><span>PROJECT 001</span><span>◦</span><span>7 MACHINES AVAILABLE</span></div></div>
 
-      <div className="workspace">
+      <div className="workspace" ref={workspaceRef}>
         <section className="preview-column" aria-label="Bike preview">
           <div className="preview-top"><div className="preview-overline"><span className="preview-dot"/> SHOWROOM / 2D VIEW</div><div className="view-badges"><span><Camera size={13}/> {showingAI?'AI CONCEPT':'BIKE REFERENCE'}</span><span className="badge-outline">SIDE PROFILE</span></div></div>
           <div className="photo-stage">

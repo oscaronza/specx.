@@ -96,7 +96,22 @@ const colors = [
   {label:'Mars red',hex:'#a23d3a'}, {label:'Deep ocean',hex:'#2f576e'},
   {label:'Desert sand',hex:'#c3aa86'}
 ];
-const money = (n) => new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',maximumFractionDigits:0}).format(n);
+// All editable/base prices are stored in AUD. Currency conversion is display-only.
+const FX_SOURCES = [
+  'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/aud.min.json',
+  'https://latest.currency-api.pages.dev/v1/currencies/aud.min.json'
+];
+const FALLBACK_CURRENCIES = ['AUD','USD','EUR','GBP','NZD','CAD','JPY','CNY','INR','KRW','SGD','HKD','CHF','AED','SAR','PHP','IDR','MYR','THB','ZAR','BRL','MXN','TRY','PLN','SEK','NOK','DKK','TWD','VND','PKR','BDT','EGP'];
+const FIAT_CODES = (()=>{try{return Intl.supportedValuesOf('currency')}catch{return FALLBACK_CURRENCIES}})();
+const currencyDisplay = (value,currency='AUD',rate=1) => {
+  const converted = Number(value) * rate;
+  if(!Number.isFinite(converted)) return '—';
+  try {return new Intl.NumberFormat(undefined,{style:'currency',currency,currencyDisplay:'symbol',maximumFractionDigits:currency==='JPY'||currency==='KRW'||currency==='VND'?0:2,minimumFractionDigits:0}).format(converted)}
+  catch {return currency+' '+converted.toFixed(2)}
+};
+const money = (n) => currencyDisplay(n,'AUD',1);
+function loadCurrencyPreference(){try{const code=new URLSearchParams(window.location.search).get('currency')||localStorage.getItem('specx-currency');return FIAT_CODES.includes(code)?code:'AUD'}catch{return 'AUD'}}
+
 const defaults = {bike:'surron', parts:{}, color:'Void black'};
 const VALID_BIKES = new Set(bikes.map(b=>b.id));
 function validateBuild(raw){
@@ -221,10 +236,18 @@ function BikeImage({bike,src,className='',style,alt='',loading='eager',onError})
 
 function App(){
   const [build,setBuild] = useState(initialBuild);
+  const [currency,setCurrency] = useState(loadCurrencyPreference);
+  const [fx,setFx] = useState({rates:{aud:1},date:'',status:'loading'});
+  const [tickerVisible,setTickerVisible] = useState(()=>{try{return sessionStorage.getItem('specx-ticker-closed')!=='1'}catch{return true}});
+  const [showSpaceMotion,setShowSpaceMotion] = useState(true);
+  const spaceRef = useRef(null);
+
   const [step,setStep] = useState(0);
   const [prices,setPrices] = useState(initialPrices);
   const [publishedPrices,setPublishedPrices] = useState({});
   const [showPrices,setShowPrices] = useState(false);
+  const [showSaves,setShowSaves] = useState(false);
+  const [savedBuilds,setSavedBuilds] = useState(()=>{try {const v=JSON.parse(localStorage.getItem('specx-saved-builds-v1')||'[]');return Array.isArray(v)?v.filter(x=>x&&typeof x.id==='string'&&x.build).slice(0,12):[]}catch{return []}});
   const [openBrand,setOpenBrand] = useState('SURRON');
   const [openCat,setOpenCat] = useState('pegs');
   const [search,setSearch] = useState('');
@@ -254,12 +277,44 @@ function App(){
   const bikePrice=getBikePrice(bike);
   const upgradePrice=added.reduce((sum,c)=>sum+c.choice[1],0);
   const total=bikePrice+upgradePrice;
+  const fxRate = currency==='AUD' ? 1 : fx.rates[currency.toLowerCase()];
+  const fxReady = currency==='AUD' || Number.isFinite(fxRate) && fxRate>0;
+  const shownCurrency = fxReady ? currency : 'AUD';
+  const showMoney = (n)=>currencyDisplay(n,shownCurrency,fxReady?fxRate:1);
+  const availableCurrencies = FIAT_CODES.filter(code=>code==='AUD'||Number.isFinite(fx.rates[code.toLowerCase()]) && fx.rates[code.toLowerCase()]>0);
   const color = colors.find(c=>c.label===build.color) || colors[1];
   const chosenCoat = (build.parts.coat || 0)>0;
   const displayPhoto=userPhoto || bike.image;
   const showToast = (message) => {setToast(message);clearTimeout(toastRef.current);toastRef.current=setTimeout(()=>setToast(''),3300)};
+  useEffect(()=>{try{localStorage.setItem('specx-currency',currency)}catch{}},[currency]);
+  useEffect(()=>{
+    let active=true;
+    const cached=(()=>{try{return JSON.parse(localStorage.getItem('specx-fx-cache-v1')||'null')}catch{return null}})();
+    if(cached?.rates && cached?.savedAt && Date.now()-cached.savedAt < 1000*60*60*36){
+      setFx({rates:cached.rates,date:cached.date||'',status:'cached'});
+    }
+    (async()=>{
+      for(const endpoint of FX_SOURCES){
+        try{
+          const response=await fetch(endpoint,{signal:AbortSignal.timeout(8000)});
+          if(!response.ok)throw new Error('Exchange rates unavailable');
+          const data=await response.json();
+          if(!data?.aud || !Number.isFinite(data.aud.usd))throw new Error('Invalid rates');
+          if(active){
+            const latest={rates:data.aud,date:data.date||'',status:'live'};
+            setFx(latest);
+            try{localStorage.setItem('specx-fx-cache-v1',JSON.stringify({...latest,savedAt:Date.now()}))}catch{}
+          }
+          return;
+        }catch{}
+      }
+      if(active)setFx(existing=>({...existing,status:existing.rates?.usd?'cached':'offline'}));
+    })();
+    return ()=>{active=false};
+  },[]);
   useEffect(()=>{try{localStorage.setItem('specx-build-v2',JSON.stringify(build));}catch{}},[build]);
   useEffect(()=>{try{localStorage.setItem('specx-prices-v3',JSON.stringify(prices));}catch{}},[prices]);
+  useEffect(()=>{try{localStorage.setItem('specx-saved-builds-v1',JSON.stringify(savedBuilds))}catch{}},[savedBuilds]);
   useEffect(()=>{
     fetch('/prices.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(data=>{
       if(!data?.prices)return;
@@ -269,6 +324,21 @@ function App(){
       setPublishedPrices(published);
     }).catch(()=>{});
   },[]);
+  useEffect(()=>{
+    if(reducedMotion || !showSpaceMotion) return;
+    let frame=0;
+    const onScroll=()=>{
+      if(frame)return;
+      frame=requestAnimationFrame(()=>{
+        const offset=Math.min(240,window.scrollY*.13);
+        spaceRef.current?.style.setProperty('--parallax-y',offset+'px');
+        frame=0;
+      });
+    };
+    window.addEventListener('scroll',onScroll,{passive:true});
+    onScroll();
+    return ()=>{window.removeEventListener('scroll',onScroll);cancelAnimationFrame(frame)};
+  },[reducedMotion,showSpaceMotion]);
   useEffect(()=>{
     const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
     const update=()=>setReducedMotion(motion.matches);
@@ -315,6 +385,17 @@ function App(){
   }
   function resetPhoto(){setUserPhoto(null);setPhotoFailed(false);setZoom(1);}
   function resetBuild(){setBuild(defaults);setStep(0);setOpenBrand('SURRON');setOpenCat('pegs');setUserPhoto(null);setZoom(1);setPhotoFailed(false);showToast('New build started.');}
+  function saveCurrentBuild(){
+    const title=`${bike.brand} ${bike.model} / ${new Date().toLocaleDateString()}`;
+    const entry={id:`sx-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,title,build:validateBuild(build),at:new Date().toISOString()};
+    setSavedBuilds(old=>[entry,...old].slice(0,12));
+    showToast('Build saved on this device.');
+  }
+  function loadSavedBuild(entry){
+    setBuild(validateBuild(entry.build));setUserPhoto(null);setZoom(1);setStep(2);setOpenBrand(bikes.find(b=>b.id===entry.build.bike)?.brand||'SURRON');
+    setShowSaves(false);showToast('Saved build restored.');
+  }
+  function deleteSavedBuild(id){setSavedBuilds(old=>old.filter(b=>b.id!==id));}
   function downloadBuild(){
     const lines=[
       'SPECX  /  BUILD SHEET', 'BUILD BEYOND LIMITS.', '─────────────────────────────────────────','',
@@ -323,7 +404,9 @@ function App(){
       'SELECTED UPGRADES',
       ...(added.length?added.map(c=>`${c.name.padEnd(19,' ')} ${c.choice[0]}   ${money(c.choice[1])}`):['None selected']),
       '','─────────────────────────────────────────',
-      `UPGRADES         ${money(upgradePrice)}`,`TOTAL ESTIMATE   ${money(total)} AUD`,'',
+      `UPGRADES         ${money(upgradePrice)}`,`TOTAL ESTIMATE   ${money(total)} AUD`,
+       ...(fxReady&&currency!=='AUD'?[`CONVERTED ESTIMATE  ${showMoney(total)} ${currency} (FX reference ${fx.date||'undated'})`]:[]),
+       '', 
       'Illustrative concept only. Locally edited prices may differ from retail. Photos and references do not visually apply parts. Confirm compatibility, installation, shipping, and legal requirements with suppliers. SpecX is independent from the brands mentioned.'
     ];
     const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'}),link=URL.createObjectURL(blob),a=document.createElement('a');
@@ -332,7 +415,7 @@ function App(){
   async function shareBuild(){
     try{
       const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(build))));
-      const url=new URL(window.location.href);url.searchParams.set('build',encoded);
+      const url=new URL(window.location.href);url.searchParams.set('build',encoded);url.searchParams.set('currency',currency);
       await navigator.clipboard.writeText(url.toString());showToast('Share link copied. Your uploaded photo is not included.');
     }catch{showToast('Sharing unavailable here. You can download the build sheet instead.');}
   }
@@ -353,20 +436,32 @@ function App(){
   const filtered = bikes.filter(b=>(b.brand+' '+b.model).toLowerCase().includes(search.toLowerCase()));
   const steps=[{number:'01',label:'CHOOSE BIKE'},{number:'02',label:'CUSTOMISE'},{number:'03',label:'BUILD SHEET'}];
   return <div className="site-shell">
-    <div className="starfield" aria-hidden="true"/><div className="planet-glow" aria-hidden="true"/>
+    <div ref={spaceRef} className={'cosmos-layer'+(showSpaceMotion?'':' stopped')} aria-hidden="true">
+      <div className="deep-stars"/><div className="distant-stars"/><div className="moon-orbit"/><div className="orbital-arc"/>
+      <i className="meteor meteor-one"/><i className="meteor meteor-two"/>
+    </div>
+    {tickerVisible&&<div className="orbital-ticker" role="region" aria-label="SpecX TikTok updates">
+      <div className="orbital-ticker-track" aria-hidden="true"><span>FOLLOW @SPECXEBIKES　✦　TAKING E-BIKE MODIFICATIONS TO THE MOON　✦　</span><span>FOLLOW @SPECXEBIKES　✦　TAKING E-BIKE MODIFICATIONS TO THE MOON　✦　</span></div>
+      <a className="orbital-ticker-link" href="https://www.tiktok.com/@specxebikes" target="_blank" rel="noopener noreferrer" aria-label="Visit @specxebikes on TikTok"><span>TIKTOK</span> @SPECXEBIKES <ArrowUpRight size={13}/></a>
+      <div className="orbital-ufo" aria-hidden="true"><svg viewBox="0 0 96 68"><defs><linearGradient id="ufoBeam" x1="0" y1="0" x2=".1" y2="1"><stop offset="0" stopColor="#e9f4fa" stopOpacity=".42"/><stop offset="1" stopColor="#b8d2dd" stopOpacity="0"/></linearGradient></defs><g transform="rotate(-19 49 26)"><path d="M41 35 12 67H81L56 35Z" fill="url(#ufoBeam)"/><path d="M30 26C33 5 62 5 67 26" fill="#9eaeb5" stroke="#ecf5f7" strokeWidth="2"/><ellipse cx="49" cy="30" rx="42" ry="14" fill="#aebec5" stroke="#f4ffff" strokeWidth="2"/><ellipse cx="49" cy="29" rx="35" ry="7" fill="#3b4951"/><path d="M13 32Q49 45 85 32" fill="none" stroke="#f6ffff" strokeWidth="2"/><circle cx="30" cy="37" r="2" fill="#fff"/><circle cx="49" cy="40" r="2" fill="#fff"/><circle cx="67" cy="37" r="2" fill="#fff"/></g></svg></div>
+      <button className="ticker-close" type="button" aria-label="Dismiss TikTok banner" onClick={()=>{setTickerVisible(false);try{sessionStorage.setItem('specx-ticker-closed','1')}catch{}}}><X size={16}/></button>
+    </div>}
     <header className="site-header">
       <div className="header-inner"><button type="button" className="brand-button" onClick={()=>setStep(0)} aria-label="SpecX home"><SpecXLogo/></button>
       <nav className={mobileMenu?'desktop-nav open':'desktop-nav'} aria-label="Primary navigation">
-        <button onClick={()=>{setStep(0);setMobileMenu(false)}}>THE GARAGE</button><button onClick={()=>{setStep(1);setMobileMenu(false)}}>CUSTOMISER</button><button onClick={()=>{setShowPrices(true);setMobileMenu(false)}}>EDIT PRICES</button><a className="nav-tiktok" href="https://www.tiktok.com/@specxebikes" target="_blank" rel="noopener noreferrer">TIKTOK ↗</a>
+        <button onClick={()=>{setStep(0);setMobileMenu(false)}}>THE GARAGE</button><button onClick={()=>{setStep(1);setMobileMenu(false)}}>CUSTOMISER</button><button onClick={()=>{setShowPrices(true);setMobileMenu(false)}}>EDIT PRICES</button><button onClick={()=>{setShowSaves(true);setMobileMenu(false)}}>MY BUILDS</button><button type="button" aria-pressed={!showSpaceMotion} onClick={()=>setShowSpaceMotion(v=>!v)}>{showSpaceMotion?'PAUSE SPACE FX':'RESUME SPACE FX'}</button><a className="nav-tiktok" href="https://www.tiktok.com/@specxebikes" target="_blank" rel="noopener noreferrer">TIKTOK ↗</a>
       </nav>
-      <div className="header-actions"><span className="online"><i/> SYSTEM ONLINE</span><button className="header-price" onClick={()=>setStep(2)}>{money(total)} <ArrowUpRight size={15}/></button><button className="menu-btn" aria-label="Toggle menu" onClick={()=>setMobileMenu(v=>!v)}>{mobileMenu?<X size={20}/>:<Menu size={20}/>}</button></div></div>
+      <div className="header-actions"><span className="online"><i/> SYSTEM ONLINE</span>
+        <label className="currency-control" title="Choose the currency used to display price estimates"><span>CURRENCY</span><select aria-label="Display currency" value={currency} onChange={e=>setCurrency(e.target.value)}>{FIAT_CODES.map(code=><option key={code} value={code}>{code}</option>)}</select><ChevronDown size={12}/></label>
+        <button className="header-price" onClick={()=>{setStep(2);workspaceRef.current?.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'})}}>{showMoney(total)} <ArrowUpRight size={15}/></button><button className="menu-btn" aria-label="Toggle menu" onClick={()=>setMobileMenu(v=>!v)}>{mobileMenu?<X size={20}/>:<Menu size={20}/>}</button></div></div>
     </header>
 
     <main className="main-container">
-      <div className="top-meta"><span><span className="crosshair-icon">✳</span> SPECX DESIGN LAB <span className="top-meta-muted">/ RELEASE 02.6 · SPACE EDITION</span></span><span className="meta-right">AUSTRALIA <span className="tiny-disc">●</span> PRICES IN AUD</span></div>
-      <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-left"><div className="hero-tag"><span className="pulse-dot"/> YOUR MACHINE. YOUR UNIVERSE.</div><h1 id="hero-title">BUILD OUTSIDE<br/><span>THE ORDINARY<span className="hero-period">.</span></span></h1><p>Make it yours, down to the last detail. Choose a bike, explore the parts, and see your build come together.</p><span className="hero-hint">EXPLORE THE LINEUP <ArrowRight size={14}/></span></div>
-        <div className="featured-carousel" role="region" aria-roledescription="carousel" aria-label="Featured electric bike models" onMouseEnter={()=>setCarouselHovered(true)} onMouseLeave={()=>setCarouselHovered(false)} onFocusCapture={()=>setCarouselFocused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setCarouselFocused(false)}}>
+      <div className="top-meta"><span><span className="crosshair-icon">✳</span> SPECX DESIGN STUDIO <span className="top-meta-muted">/ RELEASE 03.0 · SPACE EDITION</span></span><span className="meta-right">AUSTRALIA <span className="tiny-disc">●</span> GLOBAL CURRENCY / {shownCurrency}</span></div>
+      {currency!=='AUD' && <p className="fx-status" role="status">{fxReady?`Converted from AUD using ${fx.status==='live'?'reference':'cached'} exchange rates (${fx.date||'date unavailable'}). Indicative only.`:`Exchange rates are currently ${fx.status==='loading'?'loading':'unavailable'} — displaying base AUD estimates until rates are available.`}</p>}
+       <section className="hero" aria-labelledby="hero-title">
+        <div className="hero-left"><div className="hero-tag"><span className="pulse-dot"/> SPECX / E-BIKE CUSTOMISER</div><h1 id="hero-title">BUILD BEYOND<br/><span>LIMITS<span className="hero-period">.</span></span></h1><p className="hero-lead">Taking e-bike modifications to the moon.</p><p className="hero-subline">Choose your machine. Make every detail yours. See the estimated cost in your currency.</p><div className="hero-ctas"><button type="button" className="hero-primary" onClick={()=>workspaceRef.current?.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'})}>START BUILDING <ArrowUpRight size={17}/></button><button type="button" className="hero-secondary" onClick={()=>document.getElementById('featured-showcase')?.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'center'})}>EXPLORE MODELS <ArrowRight size={16}/></button></div><div className="hero-signature"><span className="signature-pip"/> INDEPENDENT BUILDER <span>·</span> FREE TO USE</div></div>
+        <div id="featured-showcase" className="featured-carousel" role="region" aria-roledescription="carousel" aria-label="Featured electric bike models" onMouseEnter={()=>setCarouselHovered(true)} onMouseLeave={()=>setCarouselHovered(false)} onFocusCapture={()=>setCarouselFocused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setCarouselFocused(false)}}>
           <div className="featured-bar"><span><span className="featured-indicator"/> FEATURED MACHINES</span><button type="button" className="featured-pause" aria-label={carouselPaused?'Resume automatic bike slides':'Pause automatic bike slides'} aria-pressed={carouselPaused} onClick={()=>setCarouselPaused(v=>!v)}>{carouselPaused?'▶ PLAY':'Ⅱ PAUSE'}</button></div>
           <div className="featured-view" aria-live="off">
             <div key={featuredBike.id} className={'featured-slide slide-'+slideDirection}>
@@ -381,7 +476,7 @@ function App(){
           <p className="featured-caption">Reference photographs · Images do not show selected custom parts</p>
         </div>
       </section>
-      <div className="worktop-bar"><div><span className="worktop-square">▦</span> CONFIGURATOR <span className="worktop-muted">/ PERSONAL GARAGE</span></div><div className="worktop-counter"><span>PROJECT 001</span><span>◦</span><span>10 MACHINES AVAILABLE</span></div></div>
+      <div className="worktop-bar"><div><span className="worktop-square">▦</span> CONFIGURATOR <span className="worktop-muted">/ PERSONAL GARAGE</span></div><div className="worktop-counter"><span>PROJECT 001</span><span>◦</span><span>{bikes.length} MACHINES AVAILABLE</span></div></div>
 
       <div className="workspace" ref={workspaceRef}>
         <section className="preview-column" aria-label="Bike preview">
@@ -400,7 +495,7 @@ function App(){
             <div className="preview-tools"><input ref={inputRef} type="file" accept="image/*" hidden onChange={uploadPhoto}/><button onClick={()=>inputRef.current?.click()} title="Use your own bike photo"><Upload size={15}/> <span>MY PHOTO</span></button>{userPhoto&&<button onClick={resetPhoto} title="Restore reference photo"><RotateCcw size={15}/></button>}<button onClick={()=>setShowZoom(true)} title="Full-screen preview" aria-label="Open large bike preview"><Maximize2 size={15}/></button></div>
           </div>
           <div className="finish-panel"><div className="finish-heading"><div><span className="micro">FINISH STUDIO <span>// 01</span></span><h3>Set the tone.</h3></div><span className="finish-sub">COLOUR INSPIRATION</span></div><div className="finish-row"><div className="finish-swatches">{colors.map(c=><button key={c.label} title={c.label} aria-label={c.label} aria-pressed={build.color===c.label} className={build.color===c.label?'swatch active':'swatch'} onClick={()=>selectColor(c.label)} style={{'--color':c.hex}}/>)}</div><span className="selected-color"><span className="colour-check" style={{background:color.hex}}/>{build.color}</span></div><div className="finish-tip">{chosenCoat?`Powder coating selected. ${build.color} is your finish reference; actual supplier colour may vary.`:'Colours are reference swatches only. Select powder coating in Customise to add its estimated cost.'}</div></div>
-          <div className="quick-spec-row"><div><small>SELECTED MACHINE</small><strong>{bike.brand} <span>{bike.model}</span></strong></div><div><small>PARTS ADDED</small><strong>{String(added.length).padStart(2,'0')} <span>/ {String(categories.length).padStart(2,'0')}</span></strong></div><div><small>PROJECT TOTAL</small><strong>{money(total)}</strong></div></div>
+          <div className="quick-spec-row"><div><small>SELECTED MACHINE</small><strong>{bike.brand} <span>{bike.model}</span></strong></div><div><small>PARTS ADDED</small><strong>{String(added.length).padStart(2,'0')} <span>/ {String(categories.length).padStart(2,'0')}</span></strong></div><div><small>PROJECT TOTAL</small><strong>{showMoney(total)}</strong></div></div>
         </section>
         <aside className="configurator" aria-label="Build configurator">
           <div className="config-top"><div className="config-heading"><span className="micro">SPECX / BUILD CONTROL</span><span className="config-status"><i/> ACTIVE SESSION</span></div><h2>Make it <span>yours.</span></h2><p>Every build starts with a choice.</p></div>
@@ -420,50 +515,16 @@ function App(){
                 {isExpanded&&<div className="brand-models">{groupBikes.map(b=><button key={b.id} type="button" className={build.bike===b.id?'bike-choice chosen':'bike-choice'} onClick={()=>changeBike(b.id)}>
                   <div className="bike-thumb"><BikeImage bike={b} src={b.image} loading="lazy" alt=""/><Bike size={17} className="thumb-fallback"/></div>
                   <div className="bike-choice-details"><strong>{b.model}</strong><span>{b.type}</span></div>
-                  <div className="bike-choice-right"><strong>{money(getBikePrice(b))}</strong>{build.bike===b.id?<span className="selected-check"><Check size={11}/></span>:<span className="choice-arrow"><ChevronRight size={16}/></span>}</div>
+                  <div className="bike-choice-right"><strong>{showMoney(getBikePrice(b))}</strong>{build.bike===b.id?<span className="selected-check"><Check size={11}/></span>:<span className="choice-arrow"><ChevronRight size={16}/></span>}</div>
                 </button>)}</div>}
               </div>
             })}{!filtered.length&&<p className="empty-search">No matching bikes. Try another search.</p>}</div><p className="inline-warning"><CircleHelp size={15}/> Prices are estimates. You can personalise them with Edit Prices.</p><button className="action-main" onClick={()=>setStep(1)}>CUSTOMISE THIS BIKE <ArrowUpRight size={18}/></button></>}
-            {step===1&&<><div className="section-title"><div><span className="micro muted-micro">STEP 02 / 03</span><h3>The details matter.</h3></div><span className="item-count">{added.length} ADDED</span></div><p className="parts-intro">Choose one option per category. All prices update live.</p><div className="part-accordion">{categories.map((cat,i)=>{const Icon=cat.icon;const index=build.parts[cat.id]||0;return <div className={openCat===cat.id?'part-category expanded':'part-category'} key={cat.id}><button className="part-category-head" onClick={()=>setOpenCat(openCat===cat.id?'':cat.id)} aria-expanded={openCat===cat.id}><span className="part-icon"><Icon size={17}/></span><span className="part-text"><strong>{cat.name}</strong><small>{index?cat.options[index][0]:cat.subtitle}</small></span><span className="part-price">{index?`+${money(getPartPrice(cat,index))}`:'STANDARD'}</span><ChevronDown size={17} className="accordion-arrow"/></button>{openCat===cat.id&&<div className="option-list">{cat.options.map(([label,price],j)=><button key={j} className={index===j?'option-row chosen':'option-row'} onClick={()=>selectOption(cat.id,j)}><span className="option-radio"><Check size={11}/></span><span>{label}</span><strong>{getPartPrice(cat,j)?`+${money(getPartPrice(cat,j))}`:'INCLUDED'}</strong></button>)}<div className="fitment-note"><ShieldCheck size={14}/> Concept options only — check fitment with a qualified supplier.</div>{categorySites[cat.id]&&<div className="parts-site-links"><span>REFERENCE WEBSITES</span>{categorySites[cat.id].map(s=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer">{s.name} <ExternalLink size={12}/></a>)}</div>}</div>}</div>})}</div><button className="action-main" onClick={()=>setStep(2)}>REVIEW BUILD <ArrowRight size={17}/></button></>}
-            {step===2&&<><div className="section-title"><div><span className="micro muted-micro">STEP 03 / 03</span><h3>Your build sheet.</h3></div><span className="item-count">READY</span></div><div className="sheet-id">BUILD ID <strong>SX / {bike.number} / {String(added.length).padStart(2,'0')}</strong></div><div className="summary-bike"><div className="summary-thumb"><BikeImage bike={bike} src={bike.image} alt=""/></div><div><span>BASE MACHINE</span><strong>{bike.brand}</strong><small>{bike.model}</small></div><b>{money(bikePrice)}</b></div><div className="summary-heading">SELECTED UPGRADES <span>{added.length} TOTAL</span></div>{added.length?<div className="summary-list">{added.map(c=><div key={c.id}><span><small>{c.name}</small>{c.choice[0]}</span><b>+{money(c.choice[1])}</b></div>)}</div>:<div className="summary-empty">No upgrades selected yet. Your build includes the base bike only.</div>}<div className="summary-finish"><Paintbrush size={15}/> FINISH REFERENCE <strong>{build.color}</strong></div><div className="summary-pricing"><div><span>Bike</span><strong>{money(bikePrice)}</strong></div><div><span>Upgrades</span><strong>{money(upgradePrice)}</strong></div><div className="grand-total"><span>ESTIMATED TOTAL</span><strong>{money(total)}</strong></div></div><div className="summary-actions"><button className="action-alt" onClick={()=>setShowPrices(true)}><Pencil size={15}/> EDIT ESTIMATED PRICES</button><button className="action-main" onClick={downloadBuild}><Download size={17}/> DOWNLOAD BUILD SHEET</button><button className="action-alt" onClick={shareBuild}><Share2 size={16}/> COPY SHARE LINK</button><button className="reset-button" onClick={resetBuild}><RotateCcw size={14}/> START A NEW BUILD</button></div><p className="disclaimer">Estimate only, not a quote. Prices may include local edits in AUD. Part compatibility, installation, taxes, shipping and riding regulations must be checked independently.</p></>}
+            {step===1&&<><div className="section-title"><div><span className="micro muted-micro">STEP 02 / 03</span><h3>The details matter.</h3></div><span className="item-count">{added.length} ADDED</span></div><p className="parts-intro">Choose one option per category. All prices update live.</p><div className="part-accordion">{categories.map((cat,i)=>{const Icon=cat.icon;const index=build.parts[cat.id]||0;return <div className={openCat===cat.id?'part-category expanded':'part-category'} key={cat.id}><button className="part-category-head" onClick={()=>setOpenCat(openCat===cat.id?'':cat.id)} aria-expanded={openCat===cat.id}><span className="part-icon"><Icon size={17}/></span><span className="part-text"><strong>{cat.name}</strong><small>{index?cat.options[index][0]:cat.subtitle}</small></span><span className="part-price">{index?`+${showMoney(getPartPrice(cat,index))}`:'STANDARD'}</span><ChevronDown size={17} className="accordion-arrow"/></button>{openCat===cat.id&&<div className="option-list">{cat.options.map(([label,price],j)=><button key={j} className={index===j?'option-row chosen':'option-row'} onClick={()=>selectOption(cat.id,j)}><span className="option-radio"><Check size={11}/></span><span>{label}</span><strong>{getPartPrice(cat,j)?`+${showMoney(getPartPrice(cat,j))}`:'INCLUDED'}</strong></button>)}<div className="fitment-note"><ShieldCheck size={14}/> Concept options only — check fitment with a qualified supplier.</div>{categorySites[cat.id]&&<div className="parts-site-links"><span>REFERENCE WEBSITES</span>{categorySites[cat.id].map(s=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer">{s.name} <ExternalLink size={12}/></a>)}</div>}</div>}</div>})}</div><button className="action-main" onClick={()=>setStep(2)}>REVIEW BUILD <ArrowRight size={17}/></button></>}
+            {step===2&&<><div className="section-title"><div><span className="micro muted-micro">STEP 03 / 03</span><h3>Your build sheet.</h3></div><span className="item-count">READY</span></div><div className="sheet-id">BUILD ID <strong>SX / {bike.number} / {String(added.length).padStart(2,'0')}</strong></div><div className="summary-bike"><div className="summary-thumb"><BikeImage bike={bike} src={bike.image} alt=""/></div><div><span>BASE MACHINE</span><strong>{bike.brand}</strong><small>{bike.model}</small></div><b>{showMoney(bikePrice)}</b></div><div className="summary-heading">SELECTED UPGRADES <span>{added.length} TOTAL</span></div>{added.length?<div className="summary-list">{added.map(c=><div key={c.id}><span><small>{c.name}</small>{c.choice[0]}</span><b>+{showMoney(c.choice[1])}</b></div>)}</div>:<div className="summary-empty">No upgrades selected yet. Your build includes the base bike only.</div>}<div className="summary-finish"><Paintbrush size={15}/> FINISH REFERENCE <strong>{build.color}</strong></div><div className="summary-pricing"><div><span>Bike</span><strong>{showMoney(bikePrice)}</strong></div><div><span>Upgrades</span><strong>{showMoney(upgradePrice)}</strong></div><div className="grand-total"><span>ESTIMATED TOTAL</span><strong>{showMoney(total)}</strong></div></div><div className="summary-actions"><button className="action-alt" onClick={saveCurrentBuild}><Save size={16}/> SAVE ON THIS DEVICE</button><button className="action-alt" onClick={()=>setShowSaves(true)}><Layers3 size={16}/> MY SAVED BUILDS ({savedBuilds.length})</button><button className="action-alt" onClick={()=>setShowPrices(true)}><Pencil size={15}/> EDIT ESTIMATED PRICES</button><button className="action-main" onClick={downloadBuild}><Download size={17}/> DOWNLOAD BUILD SHEET</button><button className="action-alt" onClick={shareBuild}><Share2 size={16}/> COPY SHARE LINK</button><button className="reset-button" onClick={resetBuild}><RotateCcw size={14}/> START A NEW BUILD</button></div><p className="disclaimer">Estimate only, not a quote. Prices are stored in AUD and shown in the selected currency using reference exchange rates when available. Part compatibility, installation, taxes, shipping and riding regulations must be checked independently.</p></>}
           </div>
-          <div className="price-footer"><div><span>LIVE BUILD ESTIMATE <span className="aud-tag">AUD</span></span><strong>{money(total)}</strong><small>{added.length} upgrades selected · indicative pricing</small></div><div className="price-signal"><span>↗</span></div></div>
+          <div className="price-footer"><div><span>LIVE BUILD ESTIMATE <span className="aud-tag">{shownCurrency}</span></span><strong>{showMoney(total)}</strong><small>{added.length} upgrades selected · indicative pricing</small></div><div className="price-signal"><span>↗</span></div></div>
         </aside>
       </div>
-      <section className="specx-signal" aria-label="Follow SpecX on TikTok">
-        <div className="signal-speckles" aria-hidden="true"/>
-        <div className="signal-ufo" aria-hidden="true">
-          <svg viewBox="0 0 220 162" xmlns="http://www.w3.org/2000/svg" role="presentation">
-            <defs>
-              <linearGradient id="signal-saucer-metal" x1="0" y1="0" x2="0.9" y2="1">
-                <stop offset="0" stopColor="#ffffff"/><stop offset=".44" stopColor="#aebdc2"/><stop offset="1" stopColor="#53626a"/>
-              </linearGradient>
-              <linearGradient id="signal-beam-light" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#eefbff" stopOpacity=".37"/><stop offset="1" stopColor="#c9e8ef" stopOpacity="0"/>
-              </linearGradient>
-            </defs>
-            <g transform="rotate(-15 120 58)">
-              <path d="M91 77L45 155H186L148 77Z" fill="url(#signal-beam-light)"/>
-              <path d="M87 63C90 41 105 28 125 27C146 26 161 41 163 64" fill="#64757c" stroke="#dae3e6" strokeWidth="3"/>
-              <path d="M96 58C101 42 111 34 125 34C140 34 151 43 155 58" fill="#dfe7e9" opacity=".62"/>
-              <ellipse cx="125" cy="71" rx="86" ry="24" fill="#11191d" stroke="#c7d6da" strokeWidth="3"/>
-              <path d="M42 68C55 54 84 49 125 49C167 49 198 56 208 69C192 79 160 84 125 84C90 84 57 79 42 68Z" fill="url(#signal-saucer-metal)" stroke="#f3f8f9" strokeWidth="2"/>
-              <path d="M51 73Q125 98 198 74" fill="none" stroke="#6b8189" strokeWidth="5"/>
-              <ellipse cx="125" cy="74" rx="70" ry="10" fill="none" stroke="#efffff" strokeWidth="1.8" opacity=".9"/>
-              <circle cx="78" cy="79" r="4" fill="#f6feff"/><circle cx="103" cy="84" r="4" fill="#f6feff"/><circle cx="130" cy="85" r="4" fill="#f6feff"/><circle cx="157" cy="83" r="4" fill="#f6feff"/><circle cx="180" cy="78" r="4" fill="#f6feff"/>
-            </g>
-          </svg>
-        </div>
-        <div className="signal-heading"><span><span className="signal-live-dot"/> SOCIAL TRANSMISSION / 001</span><a href="https://www.tiktok.com/@specxebikes" target="_blank" rel="noopener noreferrer" aria-label="Open SpecX on TikTok">OPEN TIKTOK <ArrowUpRight size={14}/></a></div>
-        <div className="signal-viewport">
-          <div className="signal-scroll-track">
-            {[0,1].map(copy => <a key={copy} className="signal-scroll-link" href="https://www.tiktok.com/@specxebikes" target="_blank" rel="noopener noreferrer" aria-label={copy===0?'Follow @specxebikes on TikTok':undefined} aria-hidden={copy===1?'true':undefined} tabIndex={copy===1?-1:0}>
-              <span className="signal-primary">FOLLOW <strong>@SPECXEBIKES</strong></span><span className="signal-divider" aria-hidden="true">✦</span><span className="signal-secondary">TAKING E-BIKE MODIFICATIONS TO THE MOON</span><span className="signal-divider" aria-hidden="true">✦</span>
-            </a>)}
-          </div>
-        </div>
-        <div className="signal-bottom"><span>SPECX / SOCIAL CHANNEL</span><span>NEW BUILDS &amp; UPDATES ↗</span></div>
-      </section>
       <section className="site-links" aria-labelledby="site-links-title">
         <div className="site-links-heading"><span className="micro">SPECX / RESOURCES</span><h2 id="site-links-title">Real brands. Real websites.</h2><p>Explore official manufacturer sites, Australian distributors and parts makers. External links open in a new tab. SpecX is independent and does not verify fitment or stock.</p></div>
         <div className="site-links-grid">{[...brandSites,...partSites].map(s=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer"><span>{s.name}</span><small>{s.desc}</small><ExternalLink size={17}/></a>)}</div>
@@ -472,7 +533,8 @@ function App(){
       <footer><span className="footer-brand"><img src={SPECX_LOGO} alt="SpecX moon logo"/><span className="footer-logo">SPEC<span>X</span></span></span><span>THE ELECTRIC FRONTIER / EST. 2026</span><a className="footer-social" href="https://www.tiktok.com/@specxebikes" target="_blank" rel="noopener noreferrer">TIKTOK / @specxebikes <ArrowUpRight size={14}/></a><button onClick={()=>window.scrollTo({top:0,behavior:'smooth'})}>BACK TO TOP ↑</button></footer>
     </main>
     {showZoom&&<div className="lightbox" role="dialog" aria-modal="true" aria-label="Full-size bike photo" onClick={()=>setShowZoom(false)}><button className="lightbox-close" onClick={()=>setShowZoom(false)} aria-label="Close preview"><X size={23}/></button><div className="lightbox-image" onClick={e=>e.stopPropagation()}><BikeImage bike={bike} src={displayPhoto} alt={`${bike.brand} ${bike.model}`}/></div><span>{bike.brand} / {bike.model} · REFERENCE PHOTO</span></div>}
-    {showPrices&&<div className="price-modal-backdrop" onClick={()=>setShowPrices(false)} role="presentation"><section className="price-modal" role="dialog" aria-modal="true" aria-labelledby="prices-title" onClick={e=>e.stopPropagation()}><div className="price-modal-head"><div><span className="micro">SPECX / PRICING CONTROL</span><h2 id="prices-title">Edit your estimates.</h2><p>Change prices in AUD. Edits save in <strong>this browser</strong>. Export <strong>prices.json</strong> and replace the file on GitHub to publish them for everyone.</p></div><button className="modal-close" aria-label="Close price editor" onClick={()=>setShowPrices(false)}><X size={20}/></button></div><div className="price-modal-scroll"><h3>BASE BIKE PRICES</h3>{bikes.map(b=><label className="price-editor-row" key={b.id}><span>{b.brand}<small>{b.model}</small></span><div><span>AUD $</span><PriceField value={getBikePrice(b)} onPriceChange={value=>setCustomPrice(priceKey('bike',b.id),value)} label={`${b.brand} ${b.model} price`}/></div></label>)}<h3>UPGRADE PRICES</h3>{categories.map(c=><div className="price-edit-category" key={c.id}><h4>{c.name}</h4>{c.options.map(([label,price],i)=><label className="price-editor-row" key={i}><span>{label}</span><div><span>AUD $</span><PriceField value={getPartPrice(c,i)} onPriceChange={value=>setCustomPrice(priceKey('part',c.id,i),value)} label={`${label} price`}/></div></label>)}</div>)}</div><div className="price-modal-foot"><button className="price-reset" onClick={()=>{if(window.confirm('Reset all your custom prices to the demo defaults?'))setPrices({})}}><RotateCcw size={14}/> RESET ALL</button><button className="price-export" onClick={exportPriceSheet}><Download size={14}/> EXPORT / PUBLISH PRICES</button><button className="price-done" onClick={()=>setShowPrices(false)}>DONE <Check size={15}/></button></div></section></div>}
+    {showSaves&&<div className="price-modal-backdrop" onClick={()=>setShowSaves(false)} role="presentation"><section className="saved-builds-modal" role="dialog" aria-modal="true" aria-labelledby="saved-builds-title" onClick={e=>e.stopPropagation()}><div className="saved-builds-heading"><div><span className="micro">SPECX / PERSONAL GARAGE</span><h2 id="saved-builds-title">Your saved builds.</h2><p>No account needed. These builds stay in this browser on this device.</p></div><button className="modal-close" onClick={()=>setShowSaves(false)} aria-label="Close saved builds"><X size={19}/></button></div><div className="saved-builds-list">{savedBuilds.length?savedBuilds.map(entry=><div className="saved-build-item" key={entry.id}><div><strong>{entry.title}</strong><span>{Object.values(entry.build.parts||{}).filter(n=>n>0).length} upgrades · saved {new Date(entry.at).toLocaleDateString()}</span></div><button onClick={()=>loadSavedBuild(entry)} type="button">LOAD <ArrowRight size={14}/></button><button className="saved-delete" onClick={()=>deleteSavedBuild(entry.id)} title={'Delete '+entry.title} aria-label={'Delete '+entry.title}><X size={16}/></button></div>):<div className="saved-empty">No saved builds yet. Build your bike, open Build Sheet and select Save on this device.</div>}</div><button className="saved-modal-done" onClick={()=>setShowSaves(false)}>CLOSE</button></section></div>}
+    {showPrices&&<div className="price-modal-backdrop" onClick={()=>setShowPrices(false)} role="presentation"><section className="price-modal" role="dialog" aria-modal="true" aria-labelledby="prices-title" onClick={e=>e.stopPropagation()}><div className="price-modal-head"><div><span className="micro">SPECX / PRICING CONTROL</span><h2 id="prices-title">Edit your estimates.</h2><p>Edit base prices in AUD (the reference currency). Visitor prices convert automatically. Edits save in <strong>this browser</strong>. Export <strong>prices.json</strong> and replace the file on GitHub to publish them for everyone.</p></div><button className="modal-close" aria-label="Close price editor" onClick={()=>setShowPrices(false)}><X size={20}/></button></div><div className="price-modal-scroll"><h3>BASE BIKE PRICES</h3>{bikes.map(b=><label className="price-editor-row" key={b.id}><span>{b.brand}<small>{b.model}</small></span><div><span>AUD $</span><PriceField value={getBikePrice(b)} onPriceChange={value=>setCustomPrice(priceKey('bike',b.id),value)} label={`${b.brand} ${b.model} price`}/></div></label>)}<h3>UPGRADE PRICES</h3>{categories.map(c=><div className="price-edit-category" key={c.id}><h4>{c.name}</h4>{c.options.map(([label,price],i)=><label className="price-editor-row" key={i}><span>{label}</span><div><span>AUD $</span><PriceField value={getPartPrice(c,i)} onPriceChange={value=>setCustomPrice(priceKey('part',c.id,i),value)} label={`${label} price`}/></div></label>)}</div>)}</div><div className="price-modal-foot"><button className="price-reset" onClick={()=>{if(window.confirm('Reset all your custom prices to the demo defaults?'))setPrices({})}}><RotateCcw size={14}/> RESET ALL</button><button className="price-export" onClick={exportPriceSheet}><Download size={14}/> EXPORT / PUBLISH PRICES</button><button className="price-done" onClick={()=>setShowPrices(false)}>DONE <Check size={15}/></button></div></section></div>}
     {toast&&<div className="toast" role="status"><Check size={16}/>{toast}</div>}
   </div>;
 }
